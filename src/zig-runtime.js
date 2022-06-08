@@ -3,6 +3,7 @@ let log_buf = "";
 
 let indices = [];
 let values = [];
+let value_map = {};
 
 class MemoryBlock {
 	constructor(mem, offset=0) {
@@ -119,7 +120,14 @@ const zig = {
 		this.wasm = wasm;
 		this.memory = new MemoryBlock(this.wasm.exports.memory.buffer);
 
-		values.push(globalThis); // ref: 0
+		values = [];
+		value_map = [];
+		this.addValue(globalThis);
+	},
+
+	addValue(value) {
+		const idx = values.push(value) - 1;
+		value_map[value] = idx;
 	},
 
 	zigCreateMap() {
@@ -135,11 +143,18 @@ const zig = {
 		const type = typeof prop;
 		switch (type) {
 			case "object":
-				const idx = indices.pop();
-				if (idx !== undefined) 
-					values[idx] = prop;
-					prop = idx;
-				prop = values.push(prop) - 1;
+				if (prop in value_map) {
+					// If prop exists in value map, just return the
+					// corresponding value.
+					prop = values[value_map[prop]];
+				} else {
+					const idx = indices.pop();
+					if (idx !== undefined) {
+						values[idx] = prop;
+						prop = idx;
+					}
+					prop = values.push(prop) - 1;
+				}
 				break;
 		}
 

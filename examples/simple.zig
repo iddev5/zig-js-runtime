@@ -12,5 +12,5 @@ pub fn main() !void {
     const my_custom = js.Object.initMap();
     global.set("my_custom", &my_custom);
     my_custom.set("xyz", &object);
-    std.log.info("my_custom.test_prop {}", .{my_custom.get("xyz").val.num});
+    std.log.info("my_custom.test_prop {}", .{global.get("my_custom").get("xyz").val.num});
 }

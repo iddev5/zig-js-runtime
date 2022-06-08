@@ -1,46 +1,54 @@
 const std = @import("std");
-const zjs = @import("lib.zig");
+const Allocator = std.mem.Allocator;
 
 const js = struct {
-    extern fn wzLogWrite(str: [*]const u8, len: u32) void;
-    extern fn wzLogFlush() void;
-    extern fn wzPanic(str: [*]const u8, len: u32) void;
+    extern fn zigGetProperty(id: u64, name: [*]const u8, len: u32, ret_ptr: *anyopaque) void;
+    extern fn zigSetProperty(id: u64, name: [*]const u8, len: u32, set_ptr: *const anyopaque) void;
+    extern fn zigGetIndex(id: u64, index: u32, ret_ptr: *anyopaque) void;
+    extern fn zigSetIndex(id: u64, index: u32, set_ptr: *const anyopaque) void;
 };
 
-pub const log_level = .info;
+pub const Object = extern struct {
+    tag: u8,
+    val: extern union {
+        ref: u64,
+        num: f64,
+        bool: u8,
+        str: extern struct {
+            len: u32,
+            str: [*]const u8,
+        },
+    },
 
-const LogError = error{};
-const LogWriter = std.io.Writer(void, LogError, writeLog);
+    pub const Tag = enum(u8) { ref, num, bool, str };
 
-fn writeLog(_: void, msg: []const u8) LogError!usize {
-    js.wzLogWrite(msg.ptr, @intCast(u32, msg.len));
-    return msg.len;
-}
+    pub fn get(obj: *const Object, prop: []const u8) Object {
+        var ret: Object = undefined;
+        js.zigGetProperty(obj.val.ref, prop.ptr, @intCast(u32, prop.len), &ret);
+        return ret;
+    }
 
-pub fn log(
-    comptime message_level: std.log.Level,
-    comptime scope: @Type(.EnumLiteral),
-    comptime format: []const u8,
-    args: anytype,
-) void {
-    const prefix = if (scope == .default) ": " else "(" ++ @tagName(scope) ++ "): ";
-    const writer = LogWriter{ .context = {} };
+    pub fn set(obj: *const Object, prop: []const u8, value: *const Object) void {
+        js.zigSetProperty(obj.val.ref, prop.ptr, @intCast(u32, prop.len), value);
+    }
 
-    writer.print(message_level.asText() ++ prefix ++ format ++ "\n", args) catch return;
-    js.wzLogFlush();
-}
+    pub fn getIndex(obj: *const Object, index: u32) Object {
+        var ret: Object = undefined;
+        js.zigGetIndex(obj.val.ref, index, &ret);
+        return ret;
+    }
 
-pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace) noreturn {
-    js.wzPanic(msg.ptr, @intCast(u32, msg.len));
-    unreachable;
-}
+    pub fn setIndex(obj: *const Object, index: u32, value: *const Object) void {
+        js.zigSetIndex(obj.val.ref, index, value);
+    }
 
-export fn main() void {
-    const global = zjs.global();
-    const object = zjs.Object{ .tag = 1, .val = .{ .num = 43.27 } };
-    global.set("test_prop", &object);
+    pub fn call(obj: *const Object, fun: []const u8, args: []const Object) !void {
+        _ = obj;
+        _ = fun;
+        _ = args;
+    }
+};
 
-    const test_prop = global.get("test_prop");
-    //std.debug.assert(test_prop.val.num != 43.27); // assert
-    std.log.info("test_prop {}", .{test_prop.val.num});
+pub fn global() Object {
+    return Object{ .tag = 0, .val = .{ .ref = 0 } };
 }

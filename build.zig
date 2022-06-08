@@ -5,13 +5,17 @@ const web_install_dir = std.build.InstallDir{ .custom = "www" };
 pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
 
-    const exe = b.addSharedLibrary("application", "src/main.zig", .unversioned);
+    const exe = b.addSharedLibrary("application", "examples/main.zig", .unversioned);
     exe.setTarget(.{
         .cpu_arch = .wasm32,
         .os_tag = .freestanding,
         .abi = .none,
     });
     exe.setBuildMode(mode);
+    exe.addPackage(.{
+        .name = "js-runtime",
+        .source = .{ .path = "src/main.zig" },
+    });
     exe.install();
     exe.install_step.?.dest_dir = web_install_dir;
 

@@ -151,26 +151,6 @@ const zig = {
 			ZObject.read(zig.memory.slice(set_ptr));
 	},
 
-	zigGetIndex(id, index, ret_ptr) {
-		let prop = values[id][index];
-		const type = typeof prop;
-		switch (type) {
-			case "object":
-				const idx = indices.pop();
-				if (idx !== undefined) 
-					values[idx] = prop;
-					prop = idx;
-				prop = values.push(prop) - 1;
-				break;
-		}
-
-		ZObject.write(zig.memory.slice(ret_ptr), prop, type);
-	},
-
-	zigSetIndex(id, index, set_ptr) {
-		values[id][index] = ZObject.read(zig.memory.slice(set_ptr));
-	},
-
 	zigCleanupObject(id) {
 		delete values[id];
 		indices.push(id);

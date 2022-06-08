@@ -3,7 +3,6 @@ let log_buf = "";
 
 let indices = [];
 let values = [];
-values.push(globalThis);
 
 class MemoryBlock {
 	constructor(mem, offset=0) {
@@ -73,7 +72,7 @@ class ZObject {
 		switch (type) {
 			case "object": 
 				block.setU8(0, 0); 
-				block.setU64(1, data);
+				block.setU64(8, data);
 				break;
 			case "number":
 				block.setU8(0, 1);
@@ -94,7 +93,7 @@ class ZObject {
 	static read(block) {
 		switch (block.getU8(0)) {
 			case 0:
-				return values[block.getU32(8)];
+				return values[block.getU64(8)];
 				break;
 			case 1:
 				return block.getF64(8);
@@ -123,6 +122,14 @@ const zig = {
 		values.push(globalThis); // ref: 0
 	},
 
+	zigCreateMap() {
+		return values.push(new Map()) - 1;
+	},
+
+	zigCreateArray() {
+		return values.push(new Array()) - 1;
+	},
+
 	zigGetProperty(id, name, len, ret_ptr) {
 		let prop = values[id][zig.memory.getString(name, len)];
 		const type = typeof prop;
@@ -132,7 +139,7 @@ const zig = {
 				if (idx !== undefined) 
 					values[idx] = prop;
 					prop = idx;
-				prop = values.push(prop);
+				prop = values.push(prop) - 1;
 				break;
 		}
 
@@ -153,7 +160,7 @@ const zig = {
 				if (idx !== undefined) 
 					values[idx] = prop;
 					prop = idx;
-				prop = values.push(prop);
+				prop = values.push(prop) - 1;
 				break;
 		}
 

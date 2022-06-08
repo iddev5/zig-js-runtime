@@ -2,6 +2,8 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 
 const js = struct {
+    extern fn zigCreateMap() u32;
+    extern fn zigCreateArray() u32;
     extern fn zigGetProperty(id: u64, name: [*]const u8, len: u32, ret_ptr: *anyopaque) void;
     extern fn zigSetProperty(id: u64, name: [*]const u8, len: u32, set_ptr: *const anyopaque) void;
     extern fn zigGetIndex(id: u64, index: u32, ret_ptr: *anyopaque) void;
@@ -21,6 +23,14 @@ pub const Object = extern struct {
     },
 
     pub const Tag = enum(u8) { ref, num, bool, str };
+
+    pub fn initMap() Object {
+        return .{ .tag = 0, .val = .{ .ref = js.zigCreateMap() } };
+    }
+
+    pub fn initArray() Object {
+        return .{ .tag = 0, .val = .{ .ref = js.zigCreateArray() } };
+    }
 
     pub fn get(obj: *const Object, prop: []const u8) Object {
         var ret: Object = undefined;

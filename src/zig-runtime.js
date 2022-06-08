@@ -148,12 +148,20 @@ const zig = {
 					// corresponding value.
 					prop = values[value_map[prop]];
 				} else {
-					const idx = indices.pop();
+					// If prop exists in values, then add return its
+					// index and add it to value name (as named now)
+					let idx = values.findIndex((el) => el === prop);
 					if (idx !== undefined) {
-						values[idx] = prop;
+						value_map[prop] = idx;
 						prop = idx;
+					} else {
+						idx = indices.pop();
+						if (idx !== undefined) {
+							values[idx] = prop;
+							prop = idx;
+						}
+						prop = values.push(prop) - 1;
 					}
-					prop = values.push(prop) - 1;
 				}
 				break;
 		}

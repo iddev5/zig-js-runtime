@@ -173,18 +173,18 @@ const zig = {
 
 	},
 
-  wzLogWrite(str, len) {
-    log_buf += zig.memory.getString(str, len);
-  },
+	wzLogWrite(str, len) {
+		log_buf += zig.memory.getString(str, len);
+	},
 
-  wzLogFlush() {
-    console.log(log_buf);
-    log_buf = "";
-  },
+	wzLogFlush() {
+		console.log(log_buf);
+		log_buf = "";
+	},
 
-  wzPanic(str, len) {
-    throw Error(zig.memory.getString(str, len));
-  },
+	wzPanic(str, len) {
+		throw Error(zig.memory.getString(str, len));
+	},
 };
 
 export { zig };

@@ -92,7 +92,7 @@ class ZObject {
 		}
 	}
 
-	static read(block) {
+	static read(block, memory) {
 		switch (block.getU8(0)) {
 			case 0:
 				return values[block.getU64(8)];
@@ -105,9 +105,9 @@ class ZObject {
 				return Boolean(block.getU8(8));
 				break;
 			case 3:
-				// TODO
 				const len = block.getU32(8);
-				return block.getString(16, len);
+				const ptr = block.getU32(12);
+				return memory.getString(ptr, len);
 				break;
 		}
 	}

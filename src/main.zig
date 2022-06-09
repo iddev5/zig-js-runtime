@@ -33,6 +33,10 @@ pub const Object = extern struct {
         return .{ .tag = .ref, .val = .{ .ref = js.zigCreateArray() } };
     }
 
+    pub fn initString(string: []const u8) Object {
+        return .{ .tag = .str, .val = .{ .str = .{ .len = string.len, .str = string.ptr } } };
+    }
+
     pub fn deinit(obj: *const Object) void {
         js.zigCleanupObject(obj.val.ref);
     }

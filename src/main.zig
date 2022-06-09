@@ -12,7 +12,7 @@ const js = struct {
 };
 
 pub const Object = extern struct {
-    tag: u8,
+    tag: Tag,
     val: extern union {
         ref: u64,
         num: f64,
@@ -26,11 +26,11 @@ pub const Object = extern struct {
     pub const Tag = enum(u8) { ref, num, bool, str };
 
     pub fn initMap() Object {
-        return .{ .tag = 0, .val = .{ .ref = js.zigCreateMap() } };
+        return .{ .tag = .ref, .val = .{ .ref = js.zigCreateMap() } };
     }
 
     pub fn initArray() Object {
-        return .{ .tag = 0, .val = .{ .ref = js.zigCreateArray() } };
+        return .{ .tag = .ref, .val = .{ .ref = js.zigCreateArray() } };
     }
 
     pub fn deinit(obj: *const Object) void {
@@ -65,5 +65,5 @@ pub const Object = extern struct {
 };
 
 pub fn global() Object {
-    return Object{ .tag = 0, .val = .{ .ref = 0 } };
+    return Object{ .tag = .ref, .val = .{ .ref = 0 } };
 }

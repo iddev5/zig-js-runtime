@@ -128,7 +128,12 @@ const zig = {
 
 	addValue(value) {
 		value.__uindex = uindex;
-		const idx = values.push(value) - 1;
+		let idx = indices.pop();
+		if (idx !== undefined) {
+			values[idx] = value;
+		} else {
+			idx = values.push(value) - 1;
+		}
 		value_map[uindex] = idx;
 		uindex += 1;
 		return idx;
@@ -171,8 +176,10 @@ const zig = {
 	},
 
 	zigCleanupObject(id) {
-		delete values[id];
-		indices.push(id);
+		const idx = Number(id);
+		delete value_map[values[idx].__uindex];
+		delete values[idx];
+		indices.push(idx);
 	},
 
 	zigFunctionCall(id, name, args, args_len) {

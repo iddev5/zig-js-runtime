@@ -8,6 +8,7 @@ const js = struct {
     extern fn zigSetProperty(id: u64, name: [*]const u8, len: u32, set_ptr: *const anyopaque) void;
     extern fn zigGetIndex(id: u64, index: u32, ret_ptr: *anyopaque) void;
     extern fn zigSetIndex(id: u64, index: u32, set_ptr: *const anyopaque) void;
+    extern fn zigCleanupObject(id: u64) void;
 };
 
 pub const Object = extern struct {
@@ -30,6 +31,10 @@ pub const Object = extern struct {
 
     pub fn initArray() Object {
         return .{ .tag = 0, .val = .{ .ref = js.zigCreateArray() } };
+    }
+
+    pub fn deinit(obj: *const Object) void {
+        js.zigCleanupObject(obj.val.ref);
     }
 
     pub fn get(obj: *const Object, prop: []const u8) Object {

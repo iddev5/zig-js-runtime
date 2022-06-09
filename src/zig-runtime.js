@@ -1,6 +1,7 @@
 let text_decoder = new TextDecoder;
 let log_buf = "";
 
+let uindex = 0;
 let indices = [];
 let values = [];
 let value_map = {};
@@ -126,16 +127,19 @@ const zig = {
 	},
 
 	addValue(value) {
+		value.__uindex = uindex;
 		const idx = values.push(value) - 1;
-		value_map[value] = idx;
+		value_map[uindex] = idx;
+		uindex += 1;
+		return idx;
 	},
 
 	zigCreateMap() {
-		return values.push(new Map()) - 1;
+		return zig.addValue(new Map());
 	},
 
 	zigCreateArray() {
-		return values.push(new Array()) - 1;
+		return zig.addValue(new Array());
 	},
 
 	zigGetProperty(id, name, len, ret_ptr) {
@@ -143,25 +147,17 @@ const zig = {
 		const type = typeof prop;
 		switch (type) {
 			case "object":
-				if (prop in value_map) {
+				if (prop.__uindex in value_map) {
 					// If prop exists in value map, just return the
 					// corresponding value.
-					prop = values[value_map[prop]];
+					prop = value_map[prop.__uindex];
 				} else {
-					// If prop exists in values, then add return its
-					// index and add it to value name (as named now)
-					let idx = values.findIndex((el) => el === prop);
+					idx = indices.pop();
 					if (idx !== undefined) {
-						value_map[prop] = idx;
+						values[idx] = prop;
 						prop = idx;
-					} else {
-						idx = indices.pop();
-						if (idx !== undefined) {
-							values[idx] = prop;
-							prop = idx;
-						}
-						prop = values.push(prop) - 1;
 					}
+					prop = values.push(prop) - 1;
 				}
 				break;
 		}

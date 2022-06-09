@@ -152,18 +152,7 @@ const zig = {
 		const type = typeof prop;
 		switch (type) {
 			case "object":
-				if (prop.__uindex in value_map) {
-					// If prop exists in value map, just return the
-					// corresponding value.
-					prop = value_map[prop.__uindex];
-				} else {
-					idx = indices.pop();
-					if (idx !== undefined) {
-						values[idx] = prop;
-						prop = idx;
-					}
-					prop = values.push(prop) - 1;
-				}
+				prop = value_map[prop.__uindex];
 				break;
 		}
 

@@ -8,6 +8,7 @@ pub fn main() !void {
 
     const test_prop = global.get("test_prop");
     std.log.info("test_prop {}", .{test_prop.val.num});
+
     {
         const my_custom = js.Object.initMap();
         defer my_custom.deinit();
@@ -17,8 +18,8 @@ pub fn main() !void {
     }
 
     const object2 = js.Object{ .tag = .num, .val = .{ .num = 27.43 } };
-    const very_custom = js.Object.initMap();
-    very_custom.set("abc", &object2);
+    const very_custom = js.Object.initArray();
+    very_custom.setIndex(0, &object2);
     std.log.info("very_custom is {}", .{very_custom.val.ref});
-    std.log.info("very_custom.abc {}", .{very_custom.get("abc").val.num});
+    std.log.info("very_custom.abc {}", .{very_custom.getIndex(0).val.num});
 }

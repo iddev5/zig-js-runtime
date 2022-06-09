@@ -147,8 +147,7 @@ const zig = {
 		return zig.addValue(new Array());
 	},
 
-	zigGetProperty(id, name, len, ret_ptr) {
-		let prop = values[id][zig.memory.getString(name, len)];
+	getProperty(prop, ret_ptr) {
 		const type = typeof prop;
 		switch (type) {
 			case "object":
@@ -159,9 +158,23 @@ const zig = {
 		ZObject.write(zig.memory.slice(ret_ptr), prop, type);
 	},
 
+	zigGetProperty(id, name, len, ret_ptr) {
+		let prop = values[id][zig.memory.getString(name, len)];
+		zig.getProperty(prop, ret_ptr);
+	},
+
 	zigSetProperty(id, name, len, set_ptr) {
 		values[id][zig.memory.getString(name, len)] = 
 			ZObject.read(zig.memory.slice(set_ptr));
+	},
+
+	zigGetIndex(id, index, ret_ptr) {
+		let prop = values[id][index];
+		zig.getProperty(prop, ret_ptr);
+	},
+
+	zigSetIndex(id, index, set_ptr) {
+		values[id][index] = ZObject.read(zig.memory.slice(set_ptr));
 	},
 
 	zigCleanupObject(id) {

@@ -119,7 +119,6 @@ const zig = {
 
 	init(wasm) {
 		this.wasm = wasm;
-		this.memory = new MemoryBlock(this.wasm.exports.memory.buffer);
 
 		values = [];
 		value_map = [];
@@ -155,17 +154,20 @@ const zig = {
 				break;
 		}
 
-		ZObject.write(zig.memory.slice(ret_ptr), prop, type);
+		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer, ret_ptr);
+		ZObject.write(memory, prop, type);
 	},
 
 	zigGetProperty(id, name, len, ret_ptr) {
-		let prop = values[id][zig.memory.getString(name, len)];
+		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+		let prop = values[id][memory.getString(name, len)];
 		zig.getProperty(prop, ret_ptr);
 	},
 
 	zigSetProperty(id, name, len, set_ptr) {
-		values[id][zig.memory.getString(name, len)] = 
-			ZObject.read(zig.memory.slice(set_ptr));
+		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+		values[id][memory.getString(name, len)] =
+			ZObject.read(memory.slice(set_ptr), memory);
 	},
 
 	zigGetIndex(id, index, ret_ptr) {
@@ -174,7 +176,8 @@ const zig = {
 	},
 
 	zigSetIndex(id, index, set_ptr) {
-		values[id][index] = ZObject.read(zig.memory.slice(set_ptr));
+		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+		values[id][index] = ZObject.read(memory.slice(set_ptr), memory);
 	},
 
 	zigCleanupObject(id) {
@@ -189,7 +192,8 @@ const zig = {
 	},
 
 	wzLogWrite(str, len) {
-		log_buf += zig.memory.getString(str, len);
+		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+		log_buf += memory.getString(str, len);
 	},
 
 	wzLogFlush() {
@@ -198,7 +202,8 @@ const zig = {
 	},
 
 	wzPanic(str, len) {
-		throw Error(zig.memory.getString(str, len));
+		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+		throw Error(memory.getString(str, len));
 	},
 };
 

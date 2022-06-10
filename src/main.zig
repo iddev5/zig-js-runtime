@@ -8,6 +8,7 @@ const js = struct {
     extern fn zigSetProperty(id: u64, name: [*]const u8, len: u32, set_ptr: *const anyopaque) void;
     extern fn zigGetIndex(id: u64, index: u32, ret_ptr: *anyopaque) void;
     extern fn zigSetIndex(id: u64, index: u32, set_ptr: *const anyopaque) void;
+    extern fn zigFunctionCall(id: u64, name: [*]const u8, len: u32, args: *const anyopaque, args_len: u32, ret_ptr: *anyopaque) void;
     extern fn zigCleanupObject(id: u64) void;
 };
 
@@ -61,10 +62,10 @@ pub const Object = extern struct {
         js.zigSetIndex(obj.val.ref, index, value);
     }
 
-    pub fn call(obj: *const Object, fun: []const u8, args: []const Object) !void {
-        _ = obj;
-        _ = fun;
-        _ = args;
+    pub fn call(obj: *const Object, fun: []const u8, args: []const Object) Object {
+        var ret: Object = undefined;
+        js.zigFunctionCall(obj.val.ref, fun.ptr, fun.len, args.ptr, args.len, &ret);
+        return ret;
     }
 };
 

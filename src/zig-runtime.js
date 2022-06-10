@@ -191,8 +191,20 @@ const zig = {
 		indices.push(idx);
 	},
 
-	zigFunctionCall(id, name, args, args_len) {
-
+	zigFunctionCall(id, name, len, args, args_len, ret_ptr) {
+		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+		let argv = [];
+		for (let i = 0; i < args_len; i += 1) {
+			argv.push(ZObject.read(memory.slice(args + (i * 32)), memory));
+		}
+		let result = values[id][memory.getString(name, len)].apply(values[id], argv);
+		const type = typeof result;
+		switch (type) {
+			case "object":
+				result = zig.addValue(result);
+				break;
+		}
+		ZObject.write(memory.slice(ret_ptr), result, type);
 	},
 
 	wzLogWrite(str, len) {

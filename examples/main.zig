@@ -1,5 +1,5 @@
 const std = @import("std");
-const app = @import("simple.zig");
+const app = @import("dom.zig");
 
 const js = struct {
     extern fn wzLogWrite(str: [*]const u8, len: u32) void;

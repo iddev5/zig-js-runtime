@@ -150,7 +150,11 @@ const zig = {
 		const type = typeof prop;
 		switch (type) {
 			case "object":
-				prop = value_map[prop.__uindex];
+				if (prop in value_map) {
+					prop = value_map[prop.__uindex];
+				} else {
+					prop = zig.addValue(prop);
+				}
 				break;
 		}
 

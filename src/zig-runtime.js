@@ -101,7 +101,6 @@ class ZObject {
 				return block.getF64(8);
 				break;
 			case 2:
-				// TEST
 				return Boolean(block.getU8(8));
 				break;
 			case 3:

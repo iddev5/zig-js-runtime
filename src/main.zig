@@ -19,7 +19,7 @@ pub const Object = extern struct {
     val: extern union {
         ref: u64,
         num: f64,
-        bool: u8,
+        bool: bool,
         str: extern struct {
             len: u32,
             str: [*]const u8,

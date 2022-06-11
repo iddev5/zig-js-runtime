@@ -16,7 +16,10 @@ pub fn main() !void {
     {
         const my_custom = js.Object.initMap();
         defer my_custom.deinit();
+
         global.set("my_custom", &my_custom);
+        defer global.delete("my_custom");
+
         my_custom.set("xyz", &object);
         std.log.info("my_custom.xyz {}", .{global.get("my_custom").get("xyz").val.num});
     }
@@ -28,7 +31,10 @@ pub fn main() !void {
 
     const very_custom = js.Object.initArray();
     global.set("very_custom", &very_custom);
+
     very_custom.setIndex(0, &object2);
+    defer very_custom.deleteIndex(0);
+
     std.log.info("very_custom is {}", .{very_custom.val.ref});
     //std.log.info("very_custom.abc {}", .{very_custom.getIndex(0).val.num});
 }

@@ -174,6 +174,11 @@ const zig = {
 			ZObject.read(memory.slice(set_ptr), memory);
 	},
 
+	zigDeleteProperty(id, name, len) {
+		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+		delete values[id][memory.getString(name, len)];
+	},
+
 	zigGetIndex(id, index, ret_ptr) {
 		let prop = values[id][index];
 		zig.getProperty(prop, ret_ptr);
@@ -182,6 +187,10 @@ const zig = {
 	zigSetIndex(id, index, set_ptr) {
 		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
 		values[id][index] = ZObject.read(memory.slice(set_ptr), memory);
+	},
+
+	zigDeleteIndex(id, index) {
+		delete values[id][index];
 	},
 
 	zigCleanupObject(id) {

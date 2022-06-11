@@ -4,6 +4,10 @@ const web_install_dir = std.build.InstallDir{ .custom = "www" };
 
 pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
+    const example = b.option([]const u8, "example", "Example program to use") orelse "simple";
+
+    const exe_options = b.addOptions();
+    exe_options.addOption([]const u8, "example", example);
 
     const exe = b.addSharedLibrary("application", "examples/main.zig", .unversioned);
     exe.setTarget(.{
@@ -16,6 +20,7 @@ pub fn build(b: *std.build.Builder) void {
         .name = "js-runtime",
         .source = .{ .path = "src/main.zig" },
     });
+    exe.addOptions("exe_options", exe_options);
     exe.install();
     exe.install_step.?.dest_dir = web_install_dir;
 

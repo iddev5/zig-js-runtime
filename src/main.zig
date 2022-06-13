@@ -10,7 +10,7 @@ const js = struct {
     extern fn zigGetIndex(id: u64, index: u32, ret_ptr: *anyopaque) void;
     extern fn zigSetIndex(id: u64, index: u32, set_ptr: *const anyopaque) void;
     extern fn zigDeleteIndex(id: u64, index: u32) void;
-    extern fn zigFunctionCall(id: u64, name: [*]const u8, len: u32, args: *const anyopaque, args_len: u32, ret_ptr: *anyopaque) void;
+    extern fn zigFunctionCall(id: u64, name: [*]const u8, len: u32, args: ?*const anyopaque, args_len: u32, ret_ptr: *anyopaque) void;
     extern fn zigCleanupObject(id: u64) void;
 };
 
@@ -26,7 +26,7 @@ pub const Object = extern struct {
         },
     },
 
-    pub const Tag = enum(u8) { ref, num, bool, str };
+    pub const Tag = enum(u8) { ref, num, bool, str, nulled, undef };
 
     pub fn initMap() Object {
         return .{ .tag = .ref, .val = .{ .ref = js.zigCreateMap() } };

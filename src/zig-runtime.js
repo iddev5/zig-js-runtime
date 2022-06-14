@@ -162,7 +162,7 @@ const zig = {
 			case "object":
 				switch (value) {
 					case null: return 4;
-					default: return 6;
+					default: return 0;
 				}
 				break;
 			case "number": return 1;
@@ -175,7 +175,7 @@ const zig = {
 	getProperty(prop, ret_ptr) {
 		const type = this.getType(prop);
 		switch (type) {
-			case "object":
+			case 0:
 				if (prop in value_map) {
 					prop = value_map[prop.__uindex];
 				} else {
@@ -236,7 +236,7 @@ const zig = {
 
 		const type = zig.getType(result);
 		switch (type) {
-			case "object":
+			case 0:
 				result = zig.addValue(result);
 				break;
 		}

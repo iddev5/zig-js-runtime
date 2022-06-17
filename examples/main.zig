@@ -1,7 +1,7 @@
 const std = @import("std");
 const eql = std.mem.eql;
 const example = @import("exe_options").example;
-const app = if (eql(u8, example, "simple")) @import("simple.zig") else if (eql(u8, example, "extended")) @import("extended.zig") else @import("dom.zig");
+const app = if (eql(u8, example, "simple")) @import("simple.zig") else if (eql(u8, example, "extended")) @import("extended.zig") else if (eql(u8, example, "func")) @import("func.zig") else @import("dom.zig");
 
 const js = struct {
     extern fn wzLogWrite(str: [*]const u8, len: u32) void;

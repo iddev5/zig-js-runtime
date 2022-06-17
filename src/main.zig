@@ -9,6 +9,7 @@ const js = struct {
     extern fn zigDeleteProperty(id: u64, name: [*]const u8, len: u32) void;
     extern fn zigGetIndex(id: u64, index: u32, ret_ptr: *anyopaque) void;
     extern fn zigSetIndex(id: u64, index: u32, set_ptr: *const anyopaque) void;
+    extern fn zigGetString(val_id: u64, ptr: [*]const u8) void;
     extern fn zigDeleteIndex(id: u64, index: u32) void;
     extern fn zigFunctionCall(id: u64, name: [*]const u8, len: u32, args: ?*const anyopaque, args_len: u32, ret_ptr: *anyopaque) void;
     extern fn zigCleanupObject(id: u64) void;
@@ -26,7 +27,7 @@ pub const Object = extern struct {
         },
     },
 
-    pub const Tag = enum(u8) { ref, num, bool, str, nulled, undef };
+    pub const Tag = enum(u8) { ref, num, bool, str_in, str_out, nulled, undef };
 
     pub fn initMap() Object {
         return .{ .tag = .ref, .val = .{ .ref = js.zigCreateMap() } };
@@ -37,7 +38,7 @@ pub const Object = extern struct {
     }
 
     pub fn initString(string: []const u8) Object {
-        return .{ .tag = .str, .val = .{ .str = .{ .len = string.len, .str = string.ptr } } };
+        return .{ .tag = .str_in, .val = .{ .str = .{ .len = string.len, .str = string.ptr } } };
     }
 
     pub fn deinit(obj: *const Object) void {
@@ -70,6 +71,12 @@ pub const Object = extern struct {
 
     pub fn deleteIndex(obj: *const Object, index: u32) void {
         js.zigDeleteIndex(obj.val.ref, index);
+    }
+
+    pub fn getString(obj: *const Object, allocator: std.mem.Allocator) ![]const u8 {
+        var slice = try allocator.alloc(u8, obj.val.str.len);
+        js.zigGetString(@intCast(u64, @ptrToInt(obj.val.str.str)), slice.ptr);
+        return slice;
     }
 
     pub fn call(obj: *const Object, fun: []const u8, args: []const Object) Object {

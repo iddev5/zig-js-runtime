@@ -1,4 +1,5 @@
-let text_decoder = new TextDecoder;
+let text_decoder = new TextDecoder();
+let text_encoder = new TextEncoder();
 let log_buf = "";
 
 let uindex = 0;
@@ -85,15 +86,16 @@ class ZObject {
 				block.setU8(8, data);
 				break;
 			case 3:
-				block.setU8(0, 3);
+                // Write 4 for string
+				block.setU8(0, 4);
 				block.setU32(8, data.length);
-				//block.setU64(16, data); // TODO
+                block.setU64(12, data);
 				break;
-            case 4:
-                block.setU8(0, 4);
-                break;
             case 5:
                 block.setU8(0, 5);
+                break;
+            case 6:
+                block.setU8(0, 6);
                 break;
 		}
 	}
@@ -114,10 +116,12 @@ class ZObject {
 				const ptr = block.getU32(12);
 				return memory.getString(ptr, len);
 				break;
-			case 4:
+            case 4:
+                return values[block.getU64(12)];
+			case 5:
 				return null
 				break;
-			case 5:
+			case 6:
 				return undefined;
 				break;
 		}
@@ -137,7 +141,7 @@ const zig = {
 	},
 
 	addValue(value) {
-		value.__uindex = uindex;
+		value.__proto__.__uindex = uindex;
 		let idx = indices.pop();
 		if (idx !== undefined) {
 			values[idx] = value;
@@ -161,21 +165,24 @@ const zig = {
 		switch (typeof value) {
 			case "object":
 				switch (value) {
-					case null: return 4;
+					case null: return 5;
 					default: return 0;
 				}
 				break;
 			case "number": return 1;
 			case "boolean": return 2;
 			case "string": return 3;
-			case "undefined": return 5;
+			case "undefined": return 6;
 		}
 	},
 
 	getProperty(prop, ret_ptr) {
+        let len = undefined;
 		const type = this.getType(prop);
 		switch (type) {
-			case 0:
+            case 3:
+                len = prop.length;
+            case 0:
 				if (prop in value_map) {
 					prop = value_map[prop.__uindex];
 				} else {
@@ -183,6 +190,9 @@ const zig = {
 				}
 				break;
 		}
+
+        if (len !== undefined)
+            prop.__proto__.length = len;
 
 		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer, ret_ptr);
 		ZObject.write(memory, prop, type);
@@ -226,6 +236,11 @@ const zig = {
 		indices.push(idx);
 	},
 
+    zigGetString(val_id, ptr) {
+        let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+        memory.setString(ptr, values[value_map[val_id]]);
+    },
+
 	zigFunctionCall(id, name, len, args, args_len, ret_ptr) {
 		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
 		let argv = [];
@@ -234,12 +249,18 @@ const zig = {
 		}
 		let result = values[id][memory.getString(name, len)].apply(values[id], argv);
 
+        let length = undefined;
 		const type = zig.getType(result);
 		switch (type) {
-			case 0:
+            case 3:
+                length = result.length;
+            case 0:
 				result = zig.addValue(result);
 				break;
 		}
+
+        if (length !== undefined)
+            result.__proto__.length = length;
 
 		ZObject.write(memory.slice(ret_ptr), result, type);
 	},

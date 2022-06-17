@@ -9,5 +9,11 @@ pub fn main() !void {
     global.set("test_prop1", &object1);
 
     if (true) unreachable;
+
+    const val = global.call("string_func", &.{});
+    const str = val.getString(std.heap.page_allocator) catch unreachable;
+    std.log.info("string is: {s}\n", .{str});
+    global.set("string_prop", &val);
+
     std.log.info("{} {}", .{ global.call("udfun", &.{}).tag, global.call("nufun", &.{}).tag });
 }

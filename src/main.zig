@@ -12,6 +12,7 @@ const js = struct {
     extern fn zigGetString(val_id: u64, ptr: [*]const u8) void;
     extern fn zigDeleteIndex(id: u64, index: u32) void;
     extern fn zigFunctionCall(id: u64, name: [*]const u8, len: u32, args: ?*const anyopaque, args_len: u32, ret_ptr: *anyopaque) void;
+    extern fn zigFunctionInvoke(id: u64, args: ?*const anyopaque, args_len: u32, ret_ptr: *anyopaque) void;
     extern fn zigCleanupObject(id: u64) void;
 };
 
@@ -27,7 +28,7 @@ pub const Object = extern struct {
         },
     },
 
-    pub const Tag = enum(u8) { ref, num, bool, str_in, str_out, nulled, undef };
+    pub const Tag = enum(u8) { ref, num, bool, str_in, str_out, nulled, undef, func_js };
 
     pub fn initMap() Object {
         return .{ .tag = .ref, .val = .{ .ref = js.zigCreateMap() } };
@@ -82,6 +83,12 @@ pub const Object = extern struct {
     pub fn call(obj: *const Object, fun: []const u8, args: []const Object) Object {
         var ret: Object = undefined;
         js.zigFunctionCall(obj.val.ref, fun.ptr, fun.len, args.ptr, args.len, &ret);
+        return ret;
+    }
+
+    pub fn invoke(obj: *const Object, args: []const Object) Object {
+        var ret: Object = undefined;
+        js.zigFunctionInvoke(obj.val.ref, args.ptr, args.len, &ret);
         return ret;
     }
 };

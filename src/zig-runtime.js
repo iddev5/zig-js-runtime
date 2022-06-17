@@ -73,8 +73,8 @@ class MemoryBlock {
 class ZObject {
 	static write(block, data, type) {
 		switch (type) {
-			case 0:
-				block.setU8(0, 0); 
+            case 0: case 7:
+				block.setU8(0, type);
 				block.setU64(8, data);
 				break;
 			case 1:
@@ -102,7 +102,7 @@ class ZObject {
 
 	static read(block, memory) {
 		switch (block.getU8(0)) {
-			case 0:
+            case 0: case 7:
 				return values[block.getU64(8)];
 				break;
 			case 1:
@@ -173,6 +173,7 @@ const zig = {
 			case "boolean": return 2;
 			case "string": return 3;
 			case "undefined": return 6;
+            case "function": return 7;
 		}
 	},
 
@@ -182,7 +183,7 @@ const zig = {
 		switch (type) {
             case 3:
                 len = prop.length;
-            case 0:
+            case 0: case 7:
 				if (prop in value_map) {
 					prop = value_map[prop.__uindex];
 				} else {
@@ -254,7 +255,31 @@ const zig = {
 		switch (type) {
             case 3:
                 length = result.length;
-            case 0:
+            case 0: case 7:
+				result = zig.addValue(result);
+				break;
+		}
+
+        if (length !== undefined)
+            result.__proto__.length = length;
+
+		ZObject.write(memory.slice(ret_ptr), result, type);
+	},
+
+	zigFunctionInvoke(id, args, args_len, ret_ptr) {
+		let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+		let argv = [];
+		for (let i = 0; i < args_len; i += 1) {
+			argv.push(ZObject.read(memory.slice(args + (i * 32)), memory));
+		}
+		let result = values[id].apply(undefined, argv);
+
+        let length = undefined;
+		const type = zig.getType(result);
+		switch (type) {
+            case 3:
+                length = result.length;
+            case 0: case 7:
 				result = zig.addValue(result);
 				break;
 		}

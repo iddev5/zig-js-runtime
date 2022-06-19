@@ -11,7 +11,7 @@ pub fn main() !void {
     if (true) unreachable;
 
     const val = global.call("string_func", &.{});
-    const str = val.value(.str_out, std.heap.page_allocator) catch unreachable;
+    const str = val.value(.str, std.heap.page_allocator) catch unreachable;
     std.log.info("string is: {s}\n", .{str});
     global.set("string_prop", val);
 

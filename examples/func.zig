@@ -5,6 +5,6 @@ pub fn main() !void {
     if (true) unreachable;
 
     const global = js.global();
-    const xyz = global.get("xyz").value(.func_js, null);
+    const xyz = global.get("xyz").value(.func, null);
     global.set("xyz_result", xyz.invoke(&.{}));
 }

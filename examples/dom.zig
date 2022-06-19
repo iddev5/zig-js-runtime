@@ -8,8 +8,8 @@ pub fn main() !void {
     const object1 = js.createString("h1");
     const object2 = js.createString("Hello World");
 
-    const h1 = document.call("createElement", &.{object1});
-    h1.set("innerText", &object2);
+    const h1 = document.call("createElement", &.{object1}).value(.object, null);
+    h1.set("innerText", object2);
 
-    _ = document.get("body").call("appendChild", &.{h1});
+    _ = document.get("body").value(.object, null).call("appendChild", &.{h1.toValue()});
 }

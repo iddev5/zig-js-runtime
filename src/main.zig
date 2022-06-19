@@ -17,7 +17,7 @@ const js = struct {
 };
 
 pub const Value = extern struct {
-    tag: Tag,
+    tag: ValueTag,
     val: extern union {
         ref: u64,
         num: f64,
@@ -28,8 +28,8 @@ pub const Value = extern struct {
         },
     },
 
-    pub const Tag = enum(u8) {
-        object,
+    const ValueTag = enum(u8) {
+        ref,
         num,
         bool,
         str_in,
@@ -39,34 +39,53 @@ pub const Value = extern struct {
         func_js,
     };
 
+    pub const Tag = enum {
+        object,
+        num,
+        bool,
+        str,
+        nulled,
+        undef,
+        func,
+    };
+
     pub fn is(val: *const Value, comptime tag: Tag) bool {
-        return val.tag == tag;
+        return switch (tag) {
+            .object => val.tag == .object,
+            .num => val.tag == .num,
+            .bool => val.tag == .bool,
+            .str => val.tag == .str_in or val.tag == .str_out,
+            .nulled => val.tag == .nulled,
+            .undef => val.tag == .undef,
+            .func => val.tag == .func_js,
+        };
     }
 
     pub fn value(val: *const Value, comptime tag: Tag, allocator: ?std.mem.Allocator) switch (tag) {
         .object => Object,
         .num => f64,
         .bool => bool,
-        .str_in, .str_out => std.mem.Allocator.Error![]const u8,
-        .func_js => Function,
+        .str => std.mem.Allocator.Error![]const u8,
+        .func => Function,
         .nulled, .undef => @compileError("Cannot get null or undefined as a value"),
     } {
         return switch (tag) {
             .object => Object{ .ref = val.val.ref },
             .num => val.val.num,
             .bool => val.val.bool,
-            .str_in => blk: {
-                const slice: []const u8 = undefined;
-                slice.len = val.val.str.len;
-                slice.ptr = val.val.str.str;
-                break :blk slice;
+            .str => blk: {
+                if (val.tag == .str_in) {
+                    const slice: []const u8 = undefined;
+                    slice.len = val.val.str.len;
+                    slice.ptr = val.val.str.str;
+                    break :blk try allocator.?.dupe(u8, slice);
+                } else {
+                    var slice = try allocator.?.alloc(u8, val.val.str.len);
+                    js.zigGetString(@intCast(u64, @ptrToInt(val.val.str.str)), slice.ptr);
+                    break :blk slice;
+                }
             },
-            .str_out => blk: {
-                var slice = try allocator.?.alloc(u8, val.val.str.len); // catch unreachable;
-                js.zigGetString(@intCast(u64, @ptrToInt(val.val.str.str)), slice.ptr);
-                break :blk slice;
-            },
-            .func_js => Function{ .ref = val.val.ref },
+            .func => Function{ .ref = val.val.ref },
             else => unreachable,
         };
     }
@@ -80,7 +99,7 @@ pub const Object = struct {
     }
 
     pub fn toValue(obj: *const Object) Value {
-        return .{ .tag = .object, .val = .{ .ref = obj.ref } };
+        return .{ .tag = .ref, .val = .{ .ref = obj.ref } };
     }
 
     pub fn get(obj: *const Object, prop: []const u8) Value {

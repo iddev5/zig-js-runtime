@@ -70,66 +70,6 @@ class MemoryBlock {
   }
 }
 
-class ZObject {
-  static write(block, data, type) {
-    switch (type) {
-      case 0:
-      case 7:
-        block.setU8(0, type);
-        block.setU64(8, data);
-        break;
-      case 1:
-        block.setU8(0, 1);
-        block.setF64(8, data);
-        break;
-      case 2:
-        block.setU8(0, 2);
-        block.setU8(8, data);
-        break;
-      case 3:
-        // Write 4 for string
-        block.setU8(0, 4);
-        block.setU32(8, data.length);
-        block.setU64(12, data);
-        break;
-      case 5:
-        block.setU8(0, 5);
-        break;
-      case 6:
-        block.setU8(0, 6);
-        break;
-    }
-  }
-
-  static read(block, memory) {
-    switch (block.getU8(0)) {
-      case 0:
-      case 7:
-        return values[block.getU64(8)];
-        break;
-      case 1:
-        return block.getF64(8);
-        break;
-      case 2:
-        return Boolean(block.getU8(8));
-        break;
-      case 3:
-        const len = block.getU32(8);
-        const ptr = block.getU32(12);
-        return memory.getString(ptr, len);
-        break;
-      case 4:
-        return values[block.getU64(12)];
-      case 5:
-        return null;
-        break;
-      case 6:
-        return undefined;
-        break;
-    }
-  }
-}
-
 const zig = {
   wasm: undefined,
   buffer: undefined,
@@ -186,6 +126,64 @@ const zig = {
     }
   },
 
+  writeObject(block, data, type) {
+    switch (type) {
+      case 0:
+      case 7:
+        block.setU8(0, type);
+        block.setU64(8, data);
+        break;
+      case 1:
+        block.setU8(0, 1);
+        block.setF64(8, data);
+        break;
+      case 2:
+        block.setU8(0, 2);
+        block.setU8(8, data);
+        break;
+      case 3:
+        // Write 4 for string
+        block.setU8(0, 4);
+        block.setU32(8, data.length);
+        block.setU64(12, data);
+        break;
+      case 5:
+        block.setU8(0, 5);
+        break;
+      case 6:
+        block.setU8(0, 6);
+        break;
+    }
+  },
+
+  readObject(block, memory) {
+    switch (block.getU8(0)) {
+      case 0:
+      case 7:
+        return values[block.getU64(8)];
+        break;
+      case 1:
+        return block.getF64(8);
+        break;
+      case 2:
+        return Boolean(block.getU8(8));
+        break;
+      case 3:
+        const len = block.getU32(8);
+        const ptr = block.getU32(12);
+        return memory.getString(ptr, len);
+        break;
+      case 4:
+        return values[block.getU64(12)];
+      case 5:
+        return null;
+        break;
+      case 6:
+        return undefined;
+        break;
+    }
+  },
+
   getProperty(prop, ret_ptr) {
     let len = undefined;
     const type = this.getType(prop);
@@ -205,7 +203,7 @@ const zig = {
     if (len !== undefined) prop.__proto__.length = len;
 
     let memory = new MemoryBlock(zig.wasm.exports.memory.buffer, ret_ptr);
-    ZObject.write(memory, prop, type);
+    zig.writeObject(memory, prop, type);
   },
 
   zigGetProperty(id, name, len, ret_ptr) {
@@ -216,7 +214,7 @@ const zig = {
 
   zigSetProperty(id, name, len, set_ptr) {
     let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
-    values[id][memory.getString(name, len)] = ZObject.read(
+    values[id][memory.getString(name, len)] = zig.readObject(
       memory.slice(set_ptr),
       memory
     );
@@ -234,7 +232,7 @@ const zig = {
 
   zigSetIndex(id, index, set_ptr) {
     let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
-    values[id][index] = ZObject.read(memory.slice(set_ptr), memory);
+    values[id][index] = zig.readObject(memory.slice(set_ptr), memory);
   },
 
   zigDeleteIndex(id, index) {
@@ -257,7 +255,7 @@ const zig = {
     let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
     let argv = [];
     for (let i = 0; i < args_len; i += 1) {
-      argv.push(ZObject.read(memory.slice(args + i * 32), memory));
+      argv.push(zig.readObject(memory.slice(args + i * 32), memory));
     }
     let result = values[id][memory.getString(name, len)].apply(
       values[id],
@@ -277,14 +275,14 @@ const zig = {
 
     if (length !== undefined) result.__proto__.length = length;
 
-    ZObject.write(memory.slice(ret_ptr), result, type);
+    zig.writeObject(memory.slice(ret_ptr), result, type);
   },
 
   zigFunctionInvoke(id, args, args_len, ret_ptr) {
     let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
     let argv = [];
     for (let i = 0; i < args_len; i += 1) {
-      argv.push(ZObject.read(memory.slice(args + i * 32), memory));
+      argv.push(zig.readObject(memory.slice(args + i * 32), memory));
     }
     let result = values[id].apply(undefined, argv);
 
@@ -301,7 +299,7 @@ const zig = {
 
     if (length !== undefined) result.__proto__.length = length;
 
-    ZObject.write(memory.slice(ret_ptr), result, type);
+    zig.writeObject(memory.slice(ret_ptr), result, type);
   },
 
   wzLogWrite(str, len) {

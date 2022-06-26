@@ -103,6 +103,11 @@ const zig = {
     return zig.addValue(new Array());
   },
 
+  zigCreateString(str, len) {
+    let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
+    return zig.addValue(memory.getString(str, len));
+  },
+
   getType(value) {
     switch (typeof value) {
       case "object":
@@ -144,8 +149,7 @@ const zig = {
       case 3:
         // Write 4 for string
         block.setU8(0, 4);
-        block.setU32(8, data.length);
-        block.setU64(12, data);
+        block.setU64(8, data);
         break;
       case 5:
         block.setU8(0, 5);
@@ -169,12 +173,10 @@ const zig = {
         return Boolean(block.getU8(8));
         break;
       case 3:
-        const len = block.getU32(8);
-        const ptr = block.getU32(12);
-        return memory.getString(ptr, len);
+        return values[block.getU64(8)];
         break;
       case 4:
-        return values[block.getU64(12)];
+        return values[block.getU64(8)];
       case 5:
         return null;
         break;
@@ -244,6 +246,10 @@ const zig = {
     delete value_map[values[idx].__uindex];
     delete values[idx];
     indices.push(idx);
+  },
+
+  zigGetStringLength(val_id) {
+    return values[value_map[val_id]].length;
   },
 
   zigGetString(val_id, ptr) {

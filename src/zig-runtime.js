@@ -134,7 +134,7 @@ const zig = {
   writeObject(block, data, type) {
     switch (type) {
       case 0:
-      case 7:
+      case 6:
         block.setU8(0, type);
         block.setU64(8, data);
         break;
@@ -147,15 +147,14 @@ const zig = {
         block.setU8(8, data);
         break;
       case 3:
-        // Write 4 for string
-        block.setU8(0, 4);
+        block.setU8(0, 3);
         block.setU64(8, data);
+        break;
+      case 4:
+        block.setU8(0, 4);
         break;
       case 5:
         block.setU8(0, 5);
-        break;
-      case 6:
-        block.setU8(0, 6);
         break;
     }
   },
@@ -163,7 +162,7 @@ const zig = {
   readObject(block, memory) {
     switch (block.getU8(0)) {
       case 0:
-      case 7:
+      case 6:
         return values[block.getU64(8)];
         break;
       case 1:
@@ -175,8 +174,6 @@ const zig = {
       case 3:
         return values[block.getU64(8)];
         break;
-      case 4:
-        return values[block.getU64(8)];
       case 5:
         return null;
         break;
@@ -193,7 +190,7 @@ const zig = {
       case 3:
         len = prop.length;
       case 0:
-      case 7:
+      case 6:
         if (prop in value_map) {
           prop = value_map[prop.__uindex];
         } else {
@@ -274,7 +271,7 @@ const zig = {
       case 3:
         length = result.length;
       case 0:
-      case 7:
+      case 6:
         result = zig.addValue(result);
         break;
     }
@@ -298,7 +295,7 @@ const zig = {
       case 3:
         length = result.length;
       case 0:
-      case 7:
+      case 6:
         result = zig.addValue(result);
         break;
     }

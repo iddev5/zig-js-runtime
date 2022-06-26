@@ -30,8 +30,7 @@ pub const Value = extern struct {
         ref,
         num,
         bool,
-        str_in,
-        str_out,
+        str,
         nulled,
         undef,
         func_js,
@@ -52,7 +51,7 @@ pub const Value = extern struct {
             .object => val.tag == .object,
             .num => val.tag == .num,
             .bool => val.tag == .bool,
-            .str => val.tag == .str_in or val.tag == .str_out,
+            .str => val.tag == .str,
             .nulled => val.tag == .nulled,
             .undef => val.tag == .undef,
             .func => val.tag == .func_js,
@@ -156,7 +155,7 @@ pub fn createArray() Object {
 }
 
 pub fn createString(string: []const u8) Value {
-    return .{ .tag = .str_in, .val = .{ .ref = js.zigCreateString(string.ptr, string.len) } };
+    return .{ .tag = .str, .val = .{ .ref = js.zigCreateString(string.ptr, string.len) } };
 }
 
 pub fn createNumber(num: f64) Value {

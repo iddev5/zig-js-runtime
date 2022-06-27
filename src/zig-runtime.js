@@ -113,7 +113,7 @@ const zig = {
       case "object":
         switch (value) {
           case null:
-            return 5;
+            return 4;
           default:
             return 0;
         }
@@ -125,9 +125,9 @@ const zig = {
       case "string":
         return 3;
       case "undefined":
-        return 6;
+        return 5;
       case "function":
-        return 7;
+        return 6;
     }
   },
 
@@ -174,10 +174,10 @@ const zig = {
       case 3:
         return values[block.getU64(8)];
         break;
-      case 5:
+      case 4:
         return null;
         break;
-      case 6:
+      case 5:
         return undefined;
         break;
     }

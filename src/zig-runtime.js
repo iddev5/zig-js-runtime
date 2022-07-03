@@ -112,7 +112,7 @@ const zig = {
     return zig.addValue(function () {
         const args = zig.addValue(arguments);
         zig.wasm.exports.wasmCallFunction(id, args, arguments.length);
-        const return_value = values[value_map[args]]["return_value"];
+        const return_value = values[args]["return_value"];
         zig.zigCleanupObject(args);
         return return_value;
     });

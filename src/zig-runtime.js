@@ -108,6 +108,16 @@ const zig = {
     return zig.addValue(memory.getString(str, len));
   },
 
+  zigCreateFunction(id) {
+    return zig.addValue(function () {
+        const args = zig.addValue(arguments);
+        zig.wasm.exports.wasmCallFunction(id, args, arguments.length);
+        const return_value = values[value_map[args]]["return_value"];
+        zig.zigCleanupObject(args);
+        return return_value;
+    });
+  },
+
   getType(value) {
     switch (typeof value) {
       case "object":
@@ -162,7 +172,7 @@ const zig = {
   readObject(block, memory) {
     switch (block.getU8(0)) {
       case 0:
-      case 6:
+      case 7:
         return values[block.getU64(8)];
         break;
       case 1:
@@ -183,7 +193,7 @@ const zig = {
     }
   },
 
-  getProperty(prop, ret_ptr) {
+  getPropertyEx(prop, ret_ptr, offset) {
     let len = undefined;
     const type = this.getType(prop);
     switch (type) {
@@ -201,8 +211,12 @@ const zig = {
 
     if (len !== undefined) prop.__proto__.length = len;
 
-    let memory = new MemoryBlock(zig.wasm.exports.memory.buffer, ret_ptr);
+    let memory = new MemoryBlock(ret_ptr, offset);
     zig.writeObject(memory, prop, type);
+  },
+
+  getProperty(prop, ret_ptr) {
+    return zig.getPropertyEx(prop, zig.wasm.exports.memory.buffer, ret_ptr);
   },
 
   zigGetProperty(id, name, len, ret_ptr) {

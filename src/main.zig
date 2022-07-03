@@ -108,7 +108,7 @@ pub const Object = struct {
     }
 
     pub fn getIndex(obj: *const Object, index: u32) Value {
-        var ret: Object = undefined;
+        var ret: Value = undefined;
         js.zigGetIndex(obj.ref, index, &ret);
         return ret;
     }
@@ -131,8 +131,12 @@ pub const Object = struct {
 pub const Function = struct {
     ref: u64,
 
-    pub fn deinit(obj: *const Object) void {
-        js.zigCleanupObject(obj.ref);
+    pub fn deinit(func: *const Function) void {
+        js.zigCleanupObject(func.ref);
+    }
+
+    pub fn toValue(func: *const Function) Value {
+        return .{ .tag = .func_zig, .val = .{ .ref = func.ref } };
     }
 
     pub fn invoke(func: *const Function, args: []const Value) Value {

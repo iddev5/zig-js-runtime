@@ -258,7 +258,7 @@ const zig = {
     let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
     let argv = [];
     for (let i = 0; i < args_len; i += 1) {
-      argv.push(zig.readObject(memory.slice(args + i * 32), memory));
+      argv.push(zig.readObject(memory.slice(args + i * 16), memory));
     }
     let result = values[id][memory.getString(name, len)].apply(
       values[id],
@@ -285,7 +285,7 @@ const zig = {
     let memory = new MemoryBlock(zig.wasm.exports.memory.buffer);
     let argv = [];
     for (let i = 0; i < args_len; i += 1) {
-      argv.push(zig.readObject(memory.slice(args + i * 32), memory));
+      argv.push(zig.readObject(memory.slice(args + i * 16), memory));
     }
     let result = values[id].apply(undefined, argv);
 

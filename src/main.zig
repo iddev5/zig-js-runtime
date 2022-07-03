@@ -1,11 +1,12 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+const builtin = @import("builtin");
 
 const js = struct {
     extern fn zigCreateMap() u32;
     extern fn zigCreateArray() u32;
     extern fn zigCreateString(str: [*]const u8, len: u32) u32;
-    extern fn zigCreateFunction(id: u32) u32;
+    extern fn zigCreateFunction(id: *const anyopaque) u32;
     extern fn zigGetProperty(id: u64, name: [*]const u8, len: u32, ret_ptr: *anyopaque) void;
     extern fn zigSetProperty(id: u64, name: [*]const u8, len: u32, set_ptr: *const anyopaque) void;
     extern fn zigDeleteProperty(id: u64, name: [*]const u8, len: u32) void;
@@ -148,9 +149,14 @@ pub const Function = struct {
     }
 };
 
-export fn wasmCallFunction(id: u32, args: u32, len: u32) void {
+export fn wasmCallFunction(id: *anyopaque, args: u32, len: u32) void {
     const obj = Object{ .ref = args };
-    obj.set("return_value", functions.items[id](obj, len));
+    if (builtin.zig_backend == .stage1) {
+        obj.set("return_value", functions.items[@ptrToInt(id) - 1](obj, len));
+    } else {
+        var func = @ptrCast(*FunType, @alignCast(std.meta.alignment(*FunType), id));
+        obj.set("return_value", func(obj, len));
+    }
 }
 
 pub fn global() Object {
@@ -190,6 +196,9 @@ const FunType = fn (args: Object, args_len: u32) Value;
 var functions: std.ArrayListUnmanaged(FunType) = .{};
 
 pub fn createFunction(fun: FunType) Function {
-    functions.append(std.heap.page_allocator, fun) catch unreachable;
-    return .{ .ref = js.zigCreateFunction(functions.items.len - 1) };
+    if (builtin.zig_backend == .stage1) {
+        functions.append(std.heap.page_allocator, fun) catch unreachable;
+        return .{ .ref = js.zigCreateFunction(@intToPtr(*anyopaque, functions.items.len)) };
+    }
+    return .{ .ref = js.zigCreateFunction(&fun) };
 }

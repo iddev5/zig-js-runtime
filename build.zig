@@ -26,14 +26,14 @@ pub fn build(b: *std.build.Builder) void {
 
     // Install step
     const install_rt_js = b.addInstallFileWithDir(
-        .{ .path = getRoot() ++ "/src/zig-runtime.js" },
+        .{ .path = comptime getRoot() ++ "/src/zig-runtime.js" },
         web_install_dir,
         "zig-runtime.js",
     );
     exe.install_step.?.step.dependOn(&install_rt_js.step);
 
     const install_template_html = b.addInstallFileWithDir(
-        .{ .path = getRoot() ++ "/www/template.html" },
+        .{ .path = comptime getRoot() ++ "/www/template.html" },
         web_install_dir,
         "application.html",
     );

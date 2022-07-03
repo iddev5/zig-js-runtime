@@ -5,6 +5,7 @@ const js = struct {
     extern fn zigCreateMap() u32;
     extern fn zigCreateArray() u32;
     extern fn zigCreateString(str: [*]const u8, len: u32) u32;
+    extern fn zigCreateFunction(id: u32) u32;
     extern fn zigGetProperty(id: u64, name: [*]const u8, len: u32, ret_ptr: *anyopaque) void;
     extern fn zigSetProperty(id: u64, name: [*]const u8, len: u32, set_ptr: *const anyopaque) void;
     extern fn zigDeleteProperty(id: u64, name: [*]const u8, len: u32) void;
@@ -34,6 +35,7 @@ pub const Value = extern struct {
         nulled,
         undef,
         func_js,
+        func_zig,
     };
 
     pub const Tag = enum {
@@ -54,7 +56,7 @@ pub const Value = extern struct {
             .str => val.tag == .str,
             .nulled => val.tag == .nulled,
             .undef => val.tag == .undef,
-            .func => val.tag == .func_js,
+            .func => val.tag == .func_js or val.tag == .func_zig,
         };
     }
 
@@ -146,6 +148,11 @@ pub const Function = struct {
     }
 };
 
+export fn wasmCallFunction(id: u32, args: u32, len: u32) void {
+    const obj = Object{ .ref = args };
+    obj.set("return_value", functions.items[id](obj, len));
+}
+
 pub fn global() Object {
     return Object{ .ref = 0 };
 }
@@ -176,4 +183,13 @@ pub fn createNull() Value {
 
 pub fn createUndefined() Value {
     return .{ .tag = .undef, .val = undefined };
+}
+
+const FunType = fn (args: Object, args_len: u32) Value;
+
+var functions: std.ArrayListUnmanaged(FunType) = .{};
+
+pub fn createFunction(fun: FunType) Function {
+    functions.append(std.heap.page_allocator, fun) catch unreachable;
+    return .{ .ref = js.zigCreateFunction(functions.items.len - 1) };
 }
